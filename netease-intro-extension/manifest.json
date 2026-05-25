@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "音乐播报",
+  "version": "2.0",
+  "description": "在每首歌播放前，用 AI 生成简短介绍并语音播报。支持网易云、QQ音乐",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "*://music.163.com/*",
+    "*://*.y.qq.com/*",
+    "*://y.qq.com/*",
+    "https://dashscope.aliyuncs.com/*",
+    "https://api.deepseek.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "音乐播报"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://music.163.com/*",
+        "*://*.y.qq.com/*",
+        "*://y.qq.com/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["*://music.163.com/*"],
+      "js": ["adapters/netease.js", "intercept.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["*://*.y.qq.com/*", "*://y.qq.com/*"],
+      "js": ["adapters/qq.js", "intercept.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}

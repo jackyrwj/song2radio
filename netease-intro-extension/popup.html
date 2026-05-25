@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 280px;
+      padding: 16px;
+      font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: #e60026;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-top: 1px solid #2e2e2e;
+    }
+
+    .label {
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .status-text {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: #444;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    input:checked + .slider { background: #e60026; }
+    input:checked + .slider::before { transform: translateX(20px); }
+
+    .key-section {
+      margin-top: 14px;
+      border-top: 1px solid #2e2e2e;
+      padding-top: 14px;
+    }
+
+    .key-label {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .key-input {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 12px;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 4px;
+      color: #fff;
+      font-family: ui-monospace, monospace;
+    }
+
+    .key-input:focus {
+      outline: none;
+      border-color: #e60026;
+    }
+
+    .save-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 7px;
+      background: #e60026;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .save-btn:hover { background: #ff0036; }
+    .save-btn.saved { background: #2a7d3c; }
+
+    #status { font-size: 11px; text-align: center; margin-top: 8px; color: #666; min-height: 14px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">♫</div>
+    <div class="title">音乐播报</div>
+  </div>
+
+  <div class="row">
+    <div>
+      <div class="label">播放前语音播报</div>
+      <div class="status-text" id="enabled-status">加载中…</div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="toggle-enabled" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="row">
+    <div>
+      <div class="label">AI 生成介绍</div>
+      <div class="status-text" id="ai-status">关闭时使用简单文案</div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="toggle-ai" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="key-section">
+    <label class="key-label">音色</label>
+    <select id="voice-select" class="key-input">
+      <option value="browser">浏览器默认（兜底）</option>
+      <optgroup label="系统语音（免费）" id="browser-voices-group"></optgroup>
+      <optgroup label="百炼云端 · 普通话（需配置 API）">
+        <option value="Cherry">Cherry · 阳光女声</option>
+        <option value="Serena">Serena · 温柔女声</option>
+        <option value="Ethan">Ethan · 阳光男声</option>
+        <option value="Chelsie">Chelsie · 二次元女声</option>
+        <option value="Vivian">Vivian · 拽拽女声</option>
+        <option value="Jennifer">Jennifer · 电影感女声</option>
+        <option value="Neil">Neil · 新闻主持男声</option>
+        <option value="Vincent">Vincent · 烟嗓江湖男声</option>
+        <option value="Eldric Sage">沧明子 · 沉稳老者男声</option>
+        <option value="Maia">Maia · 知性温柔女声</option>
+      </optgroup>
+      <optgroup label="百炼云端 · 方言（需配置 API）">
+        <option value="Dylan">Dylan · 北京话男声</option>
+        <option value="Jada">Jada · 上海话女声</option>
+        <option value="Sunny">Sunny · 四川话女声</option>
+        <option value="Eric">Eric · 四川话男声</option>
+        <option value="Rocky">Rocky · 粤语男声</option>
+        <option value="Kiki">Kiki · 粤语女声</option>
+        <option value="Roy">Roy · 闽南话男声</option>
+        <option value="Peter">Peter · 天津话男声</option>
+      </optgroup>
+    </select>
+    <div class="status-text" id="voice-status" style="margin-top:4px;">使用浏览器默认 TTS</div>
+  </div>
+
+  <div class="key-section">
+    <label class="key-label">百炼 API Key</label>
+    <input type="password" id="api-key" class="key-input" placeholder="sk-..." />
+    <div class="status-text" style="margin-top:4px;">可选：用于 AI 文案 + 云端音色 TTS；不填则使用简单文案和系统语音</div>
+  </div>
+
+  <div class="row" style="border-top: 1px solid #2e2e2e;">
+    <div>
+      <div class="label">用 DeepSeek 替代生成文案</div>
+      <div class="status-text" id="provider-status">默认关，文案由百炼生成</div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="toggle-deepseek" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="key-section" id="deepseek-key-section" style="display:none;">
+    <label class="key-label">DeepSeek API Key</label>
+    <input type="password" id="deepseek-key" class="key-input" placeholder="sk-..." />
+    <div class="status-text" style="margin-top:4px;">仅替代文案；音色仍需上面的百炼 key</div>
+  </div>
+
+  <div class="key-section">
+    <button id="save-btn" class="save-btn">保存</button>
+    <div id="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
