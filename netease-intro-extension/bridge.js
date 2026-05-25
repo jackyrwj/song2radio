@@ -11,7 +11,7 @@
   chrome.storage.local.get(['enabled', 'voice'], (result) => {
     sendState({
       enabled: result.enabled !== false,
-      voice: result.voice || 'browser',
+      voice: result.voice || 'Maia',
     });
   });
 

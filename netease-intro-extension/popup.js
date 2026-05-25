@@ -48,7 +48,7 @@ chrome.storage.local.get(
     deepseekKeyInput.value = result.deepseekApiKey || '';
     const useDeepseek = (result.provider || 'qwen') === 'deepseek';
     toggleDeepseek.checked = useDeepseek;
-    voiceSelect.value = result.voice || 'browser';
+    voiceSelect.value = result.voice || 'Maia';
     updateEnabledLabel(isEnabled);
     updateAiLabel(aiOn);
     updateVoiceLabel(voiceSelect.value);
@@ -124,7 +124,7 @@ function updateVoiceLabel(v) {
     voiceStatus.textContent = '系统语音 · 免费、无延迟';
     voiceStatus.style.color = '#888';
   } else {
-    voiceStatus.textContent = '云端音色';
+    voiceStatus.textContent = v === 'Maia' ? '推荐音色 · 知性温柔女声（需百炼 key）' : '云端音色（需百炼 key）';
     voiceStatus.style.color = '#e60026';
   }
 }

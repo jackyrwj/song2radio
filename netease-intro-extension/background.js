@@ -25,7 +25,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   if (stored.provider === undefined) updates.provider = 'qwen';
   if (stored.enabled === undefined) updates.enabled = true;
   if (stored.aiEnabled === undefined) updates.aiEnabled = true;
-  if (stored.voice === undefined) updates.voice = 'browser';
+  if (stored.voice === undefined) updates.voice = 'Maia';
   if (Object.keys(updates).length) await chrome.storage.local.set(updates);
 });
 

@@ -8,7 +8,7 @@
   if (!adapter) return;
 
   let enabled = true;
-  let voicePref = 'browser';
+  let voicePref = 'Maia';
   let activeIntro = null; // { token, introAudio, resolve, onDone }
 
   // --- Mode dispatch ---
