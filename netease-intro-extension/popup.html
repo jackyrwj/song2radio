@@ -23,18 +23,21 @@
     .logo {
       width: 28px;
       height: 28px;
-      background: #e60026;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
     }
 
     .title {
       font-size: 14px;
       font-weight: 600;
       letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: #777;
+      margin-top: 2px;
     }
 
     .row {
@@ -139,8 +142,11 @@
 </head>
 <body>
   <div class="header">
-    <div class="logo">♫</div>
-    <div class="title">音乐播报</div>
+    <img class="logo" src="icons/icon-48.png" alt="" />
+    <div>
+      <div class="title">歌单电台</div>
+      <div class="subtitle">把歌单变成私人音乐电台</div>
+    </div>
   </div>
 
   <div class="row">

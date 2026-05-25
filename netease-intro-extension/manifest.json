@@ -1,8 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "音乐播报",
+  "name": "歌单电台",
   "version": "2.0",
-  "description": "在每首歌播放前，用 AI 生成简短介绍并语音播报。支持网易云、QQ音乐",
+  "description": "把你的歌单变成一档私人音乐电台",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
   "permissions": ["storage"],
   "host_permissions": [
     "*://music.163.com/*",
@@ -16,7 +21,12 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "音乐播报"
+    "default_title": "歌单电台",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
   },
   "content_scripts": [
     {
