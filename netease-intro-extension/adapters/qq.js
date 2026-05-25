@@ -8,11 +8,17 @@
   const SONG_INFO_SEL = '.player_music__info';
   const PLAY_BTN_SEL = '.btn_big_play';
 
+  let lastHandledKey = '';
+  let introActive = false;
+
   function readSongInfo() {
-    const container = document.querySelector(SONG_INFO_SEL);
+    const container = document.querySelector(SONG_INFO_SEL)
+      || document.querySelector('.player_music')
+      || document.querySelector('.mod_song_info')
+      || document.querySelector('.song_info__info');
     if (!container) return { name: '', artist: '', album: '' };
 
-    const links = container.querySelectorAll('a');
+    const links = container.querySelectorAll('a, span, div');
     let name = '';
     const artists = [];
 
@@ -20,14 +26,18 @@
       const cls = (a.className || '').toString();
       const txt = a.textContent.trim();
       if (!txt) continue;
-      if (cls.includes('playlist__author') || cls.includes('singer')) {
+      if (cls.includes('playlist__author') || cls.includes('singer') || cls.includes('author') || cls.includes('artist')) {
         artists.push(txt);
-      } else if (!name) {
+      } else if (!name && !/^(歌曲|歌手|时长|上一首|播放|暂停|下一首|列表循环|喜欢|下载)/.test(txt)) {
         name = txt;
       }
     }
 
     return { name, artist: artists.join('/'), album: '' };
+  }
+
+  function songKey(info) {
+    return info && info.name ? `${info.name}|${info.artist || ''}` : '';
   }
 
   function findPlayBtn() {
@@ -56,14 +66,31 @@
   window.__NETEASE_INTRO_ADAPTER__ = {
     name: 'qq',
     mode: 'observer',
+    hookMediaPlay: true,
 
     getSongInfo: readSongInfo,
+
+    isPlayerAudio(media) {
+      return media && (media.tagName === 'AUDIO' || media.tagName === 'VIDEO');
+    },
+
+    isIntroActive() {
+      return introActive;
+    },
+
+    setIntroActive(v) {
+      introActive = !!v;
+    },
+
+    markSongHandled(info) {
+      const key = songKey(info);
+      if (key) lastHandledKey = key;
+    },
 
     // Simple polling — robust against SPA re-renders.
     // Only announce once QQ Music is actually playing. Otherwise the page can
     // expose the first song before the user clicks play, consuming the intro too early.
     watch(onSongChange) {
-      let lastKey = '';
       let pendingKey = '';
       let playOrdinal = 0;
       let handling = false;
@@ -75,8 +102,8 @@
 
         const info = readSongInfo();
         if (!info.name) return;
-        const key = `${info.name}|${info.artist}`;
-        if (key === lastKey || key === pendingKey) return;
+        const key = songKey(info);
+        if (key === lastHandledKey || key === pendingKey) return;
         pendingKey = key;
         info.trackIndex = playOrdinal++;
 
@@ -89,7 +116,7 @@
         }
 
         if (accepted) {
-          lastKey = key;
+          lastHandledKey = key;
         } else {
           playOrdinal = Math.max(0, playOrdinal - 1);
         }

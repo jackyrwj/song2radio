@@ -73,8 +73,13 @@
 
   // ========== Observer mode (QQ Music) ==========
   function initObserverMode() {
+    if (adapter.hookMediaPlay) {
+      initMediaPlayObserverMode();
+    }
+
     adapter.watch(async (songInfo) => {
       if (!enabled) return false;
+      if (adapter.isIntroActive && adapter.isIntroActive()) return false;
       stopActiveIntro();
 
       // Pause the song while intro plays
@@ -101,6 +106,53 @@
     });
   }
 
+  function initMediaPlayObserverMode() {
+    let lastMediaKey = '';
+    const originalPlay = HTMLMediaElement.prototype.play;
+
+    HTMLMediaElement.prototype.play = function () {
+      const media = this;
+
+      if (media.__neteaseIntro) return originalPlay.apply(media, arguments);
+      if (!enabled || (adapter.isPlayerAudio && !adapter.isPlayerAudio(media))) {
+        return originalPlay.apply(media, arguments);
+      }
+
+      const mediaKey = media.currentSrc || media.src || `${media.tagName}:${Date.now()}`;
+      if (mediaKey && mediaKey === lastMediaKey) {
+        return originalPlay.apply(media, arguments);
+      }
+
+      stopActiveIntro();
+      lastMediaKey = mediaKey;
+      try { media.pause(); } catch (e) {}
+
+      const myToken = {};
+      const myIntro = { token: myToken };
+      activeIntro = myIntro;
+      if (adapter.setIntroActive) adapter.setIntroActive(true);
+
+      return new Promise((resolve, reject) => {
+        myIntro.resolve = resolve;
+
+        const resumePlayback = () => {
+          if (activeIntro && activeIntro.token === myToken) activeIntro = null;
+          if (adapter.setIntroActive) adapter.setIntroActive(false);
+          originalPlay.apply(media).then(resolve).catch(reject);
+        };
+
+        runIntroFlow(
+          myToken,
+          resumePlayback,
+          () => activeIntro && activeIntro.token === myToken,
+          myIntro,
+          undefined,
+          350
+        );
+      });
+    };
+  }
+
   // ========== Shared intro flow ==========
   function runIntroFlow(myToken, onComplete, stillValid, myIntro, preSongInfo, delay, fadeCtx) {
     const wait = typeof delay === 'number' ? delay : 500;
@@ -110,6 +162,9 @@
 
       const info = preSongInfo || adapter.getSongInfo();
       if (!info || !info.name) { onComplete(); return; }
+      if (adapter.markSongHandled) {
+        try { adapter.markSongHandled(info); } catch (e) {}
+      }
 
       const aiResponse = await requestAiIntro(info);
       if (!stillValid()) return;
@@ -243,6 +298,7 @@
     if (old.resolve) {
       try { old.resolve(); } catch (e) {}
     }
+    if (adapter.setIntroActive) adapter.setIntroActive(false);
   }
 
   // Score table for system TTS voices — higher = better quality.
