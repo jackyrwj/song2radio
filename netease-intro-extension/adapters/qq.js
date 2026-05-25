@@ -34,13 +34,24 @@
     return document.querySelector(PLAY_BTN_SEL);
   }
 
+  function findMedia() {
+    const media = Array.from(document.querySelectorAll('audio, video'));
+    return media.find(el => !el.paused && !el.ended) || media.find(el => el.src || el.currentSrc) || null;
+  }
+
+  function isMediaPlaying() {
+    const media = findMedia();
+    return !!media && !media.paused && !media.ended;
+  }
+
   // "btn_big_play--pause" modifier means "click to pause" → currently playing.
   function isPlaying(btn) {
-    return !!btn && btn.className.toString().includes('btn_big_play--pause');
+    return isMediaPlaying() || (!!btn && btn.className.toString().includes('btn_big_play--pause'));
   }
 
   let pauseWaitTimer = null;
   let pausedByUs = false;
+  let pausedMedia = null;
 
   window.__NETEASE_INTRO_ADAPTER__ = {
     name: 'qq',
@@ -96,6 +107,7 @@
     pause() {
       if (pauseWaitTimer) { clearInterval(pauseWaitTimer); pauseWaitTimer = null; }
       pausedByUs = false;
+      pausedMedia = null;
 
       return new Promise((resolve) => {
         let settled = false;
@@ -106,8 +118,25 @@
         };
 
         const confirmPaused = () => {
+          if (pausedMedia && pausedMedia.paused) return true;
           const b = findPlayBtn();
           return b && !isPlaying(b);
+        };
+
+        const pauseMedia = () => {
+          const media = findMedia();
+          if (!media || media.paused || media.ended) return false;
+          try {
+            media.pause();
+            pausedMedia = media;
+            pausedByUs = true;
+            setTimeout(() => {
+              if (confirmPaused()) finish(true);
+            }, 80);
+            return true;
+          } catch (e) {
+            return false;
+          }
         };
 
         let lastPauseClickAt = 0;
@@ -122,8 +151,13 @@
           }, 120);
         };
 
+        if (pauseMedia()) {
+          // Keep the confirmation interval running; some players briefly resume
+          // after a programmatic pause during track switches.
+        }
+
         const btn = findPlayBtn();
-        if (btn && isPlaying(btn)) {
+        if (!pausedMedia && btn && isPlaying(btn)) {
           clickPause(btn);
         }
 
@@ -141,8 +175,9 @@
             finish(true);
             return;
           }
+          if (pauseMedia()) return;
           const b = findPlayBtn();
-          if (b && isPlaying(b)) {
+          if (!pausedMedia && b && isPlaying(b)) {
             clickPause(b);
           }
         }, 80);
@@ -155,6 +190,15 @@
         pauseWaitTimer = null;
       }
       if (!pausedByUs) return;
+      const media = pausedMedia;
+      pausedMedia = null;
+      if (media && media.paused) {
+        try {
+          await media.play();
+          pausedByUs = false;
+          return;
+        } catch (e) {}
+      }
 
       const start = Date.now();
       const clickWhenReady = () => {
