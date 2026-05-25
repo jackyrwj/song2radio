@@ -74,13 +74,17 @@
   // ========== Observer mode (QQ Music) ==========
   function initObserverMode() {
     adapter.watch(async (songInfo) => {
-      if (!enabled) return;
+      if (!enabled) return false;
       stopActiveIntro();
 
       // Pause the song while intro plays
+      let paused = true;
       try {
-        if (adapter.pause) await adapter.pause();
-      } catch (e) {}
+        if (adapter.pause) paused = await adapter.pause();
+      } catch (e) {
+        paused = false;
+      }
+      if (!paused) return false;
 
       const myToken = {};
       const myIntro = { token: myToken };
@@ -93,6 +97,7 @@
 
       // Run with pre-fetched songInfo (skip the 500ms wait — observer already knows the new song)
       runIntroFlow(myToken, resumePlayback, () => activeIntro && activeIntro.token === myToken, myIntro, songInfo, 0);
+      return true;
     });
   }
 

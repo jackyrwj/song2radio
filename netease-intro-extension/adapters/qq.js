@@ -53,18 +53,37 @@
     // expose the first song before the user clicks play, consuming the intro too early.
     watch(onSongChange) {
       let lastKey = '';
+      let pendingKey = '';
       let playOrdinal = 0;
-      const tick = () => {
+      let handling = false;
+
+      const tick = async () => {
+        if (handling) return;
         const btn = findPlayBtn();
         if (!isPlaying(btn)) return;
 
         const info = readSongInfo();
         if (!info.name) return;
         const key = `${info.name}|${info.artist}`;
-        if (key === lastKey) return;
-        lastKey = key;
+        if (key === lastKey || key === pendingKey) return;
+        pendingKey = key;
         info.trackIndex = playOrdinal++;
-        onSongChange(info);
+
+        handling = true;
+        let accepted = false;
+        try {
+          accepted = await Promise.resolve(onSongChange(info));
+        } catch (e) {
+          accepted = false;
+        }
+
+        if (accepted) {
+          lastKey = key;
+        } else {
+          playOrdinal = Math.max(0, playOrdinal - 1);
+        }
+        pendingKey = '';
+        handling = false;
       };
       setInterval(tick, 150);
       // Also fire as soon as possible after playback has really started
@@ -79,12 +98,33 @@
       pausedByUs = false;
 
       return new Promise((resolve) => {
-        const btn = findPlayBtn();
-        if (btn && isPlaying(btn)) {
+        let settled = false;
+        const finish = (ok) => {
+          if (settled) return;
+          settled = true;
+          resolve(ok);
+        };
+
+        const confirmPaused = () => {
+          const b = findPlayBtn();
+          return b && !isPlaying(b);
+        };
+
+        let lastPauseClickAt = 0;
+        const clickPause = (btn) => {
+          const now = Date.now();
+          if (now - lastPauseClickAt < 400) return;
+          lastPauseClickAt = now;
           btn.click();
           pausedByUs = true;
-          resolve(true);
-          return;
+          setTimeout(() => {
+            if (confirmPaused()) finish(true);
+          }, 120);
+        };
+
+        const btn = findPlayBtn();
+        if (btn && isPlaying(btn)) {
+          clickPause(btn);
         }
 
         const start = Date.now();
@@ -92,18 +132,20 @@
           if (Date.now() - start > 10000) {
             clearInterval(pauseWaitTimer);
             pauseWaitTimer = null;
-            resolve(false);
+            finish(false);
+            return;
+          }
+          if (confirmPaused() && pausedByUs) {
+            clearInterval(pauseWaitTimer);
+            pauseWaitTimer = null;
+            finish(true);
             return;
           }
           const b = findPlayBtn();
           if (b && isPlaying(b)) {
-            b.click();
-            pausedByUs = true;
-            clearInterval(pauseWaitTimer);
-            pauseWaitTimer = null;
-            resolve(true);
+            clickPause(b);
           }
-        }, 150);
+        }, 80);
       });
     },
 
