@@ -1,0 +1,66 @@
+name: Validate extension
+
+# 跑在 GitHub 托管 runner 上。本仓库是公开仓库，托管 runner 分钟数免费，
+# 且无需维护——没有理由用自建 runner（自建反而会让任何人的 fork PR
+# 在自己的服务器上执行代码）。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: 校验
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 语法错误会让扩展在 Chrome 里静默失效，而 Chrome 的错误提示藏在
+      # chrome://extensions 的详情页里，很容易漏掉。这一步在提交前就拦住。
+      - name: JS 语法检查
+        run: |
+          find netease-intro-extension -name '*.js' -print0 \
+            | xargs -0 -n1 node --check
+          echo "语法检查通过"
+
+      # manifest 合法性 + 所有被引用的文件是否真实存在。
+      # 重命名或移动文件后忘了改 manifest，是扩展加载失败最常见的原因。
+      - name: 扩展完整性校验
+        run: node scripts/validate-extension.mjs
+
+  package:
+    name: 打包
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 生成上架用 zip
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./netease-intro-extension/manifest.json').version")
+          OUT="song2radio-${VERSION}.zip"
+          # 在扩展目录内打包：Chrome 应用商店要求 manifest.json 在 zip 根目录，
+          # 不能多一层父目录
+          (cd netease-intro-extension && zip -qr "../${OUT}" . -x '*.DS_Store')
+          test -s "$OUT"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+          echo "产物: $OUT  $(du -h "$OUT" | cut -f1)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: song2radio-${{ github.sha }}
+          path: ${{ env.OUT }}
+          if-no-files-found: error
+          retention-days: 14
