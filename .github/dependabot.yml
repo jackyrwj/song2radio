@@ -1,0 +1,19 @@
+# 让 Dependabot 盯着 .github/workflows 里的 action 版本。
+#
+# 为什么值得配：workflow 里的 uses: actions/checkout@v4 这类引用不会自己更新，
+# 而 GitHub 会逐步淘汰旧的 runner 镜像和 action 大版本，到时候构建直接失败。
+#
+# 两个关键点：
+#   directory 对 github-actions 生态固定填 "/"，不要写 .github/workflows，
+#     写错了 Dependabot 会静默不工作。
+#   groups 把所有 action 升级合并成一个 PR，配合 monthly，
+#     避免出现「机器人一直开 PR、人一直不合、最后全烂在那里」的局面。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
