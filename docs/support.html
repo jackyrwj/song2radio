@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="电台情歌浏览器扩展的使用帮助、故障排查和反馈入口。" />
+  <title>帮助与支持｜电台情歌</title>
+  <link rel="icon" href="icon-128.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img src="icon-128.png" alt="" width="40" height="40" />
+      <span>电台情歌</span>
+    </a>
+    <nav class="site-nav" aria-label="主要导航">
+      <a href="index.html">首页</a>
+      <a href="privacy.html">隐私政策</a>
+      <a href="support.html" aria-current="page">帮助与支持</a>
+      <a href="https://github.com/jackyrwj/song2radio">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <header class="page-head">
+      <p class="eyebrow">SUPPORT</p>
+      <h1>帮助与支持</h1>
+      <p class="lead">多数问题刷新音乐页面就能解决。仍有问题时，请把浏览器版本、音乐网站和复现步骤告诉我们。</p>
+      <div class="actions">
+        <a class="button" href="https://github.com/jackyrwj/song2radio/issues/new?template=bug-report.md">反馈问题</a>
+        <a class="button secondary" href="https://github.com/jackyrwj/song2radio/issues">查看已知问题</a>
+      </div>
+    </header>
+
+    <section class="section" aria-labelledby="start-title">
+      <h2 id="start-title">开始使用</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>1. 打开音乐网页</h3>
+          <p>访问网易云音乐或 QQ 音乐网页版，正常选择歌单并开始播放。</p>
+        </article>
+        <article class="card">
+          <h3>2. 选择设置</h3>
+          <p>点击扩展图标，可开关 AI 介绍、专辑资料，并选择主持音色。</p>
+        </article>
+        <article class="card">
+          <h3>3. 等待口播</h3>
+          <p>切换到新歌时，原播放器进度条会显示准备状态，口播完成后歌曲继续播放。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="faq-title">
+      <h2 id="faq-title">常见问题</h2>
+      <details>
+        <summary>安装后没有播报怎么办？</summary>
+        <p>先确认“播放前语音播报”已开启，然后刷新网易云音乐或 QQ 音乐页面。如果仍未生效，请在 <code>chrome://extensions/</code> 确认扩展已启用，并重试切换歌曲。</p>
+      </details>
+      <details>
+        <summary>为什么只听到简单播报或系统音色？</summary>
+        <p>共享 AI 或语音服务可能暂时不可用、达到当日额度或请求超时。扩展会自动降级，避免阻塞音乐播放；稍后再试即可。</p>
+      </details>
+      <details>
+        <summary>为什么同一张专辑不会重复介绍？</summary>
+        <p>为避免打断听歌，同一播放会话中，一张专辑通常只在第一次出现时介绍。</p>
+      </details>
+      <details>
+        <summary>需要提供自己的 API Key 吗？</summary>
+        <p>不需要。供应商 Key 只配置在电台情歌服务端，不会发给浏览器扩展。</p>
+      </details>
+      <details>
+        <summary>如何删除本地数据？</summary>
+        <p>卸载扩展即可由浏览器清除本地设置与匿名安装标识。服务端数据请求请阅读<a href="privacy.html#choices">隐私政策第 7 节</a>。</p>
+      </details>
+    </section>
+
+    <section class="section" aria-labelledby="contact-title">
+      <h2 id="contact-title">联系我们</h2>
+      <div class="notice">
+        <strong>在 GitHub 提交问题</strong>
+        <p>请说明 Chrome 版本、网易云或 QQ 音乐、发生时间、复现步骤和你看到的现象。请勿提交账号密码、Cookie、API Key 或其他敏感信息。</p>
+        <p><a href="https://github.com/jackyrwj/song2radio/issues/new">新建反馈</a> · <a href="https://github.com/jackyrwj/song2radio/issues/new?labels=privacy&amp;template=privacy-request.md">隐私请求</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 电台情歌</p>
+    <nav aria-label="页脚导航">
+      <a href="index.html">首页</a>
+      <a href="privacy.html">隐私政策</a>
+      <a href="https://github.com/jackyrwj/song2radio">源代码</a>
+    </nav>
+  </footer>
+</body>
+</html>

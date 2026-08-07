@@ -8,9 +8,10 @@
     window.postMessage({ type: 'NETEASE_INTRO_STATE', ...state }, '*');
   }
 
-  chrome.storage.local.get(['enabled', 'voice'], (result) => {
+  chrome.storage.local.get(['enabled', 'albumEnabled', 'voice'], (result) => {
     sendState({
       enabled: result.enabled !== false,
+      albumEnabled: result.albumEnabled !== false,
       voice: result.voice || 'Maia',
     });
   });
@@ -18,6 +19,7 @@
   chrome.storage.onChanged.addListener((changes) => {
     const update = {};
     if ('enabled' in changes) update.enabled = changes.enabled.newValue;
+    if ('albumEnabled' in changes) update.albumEnabled = changes.albumEnabled.newValue;
     if ('voice' in changes) update.voice = changes.voice.newValue;
     if (Object.keys(update).length) sendState(update);
   });
@@ -26,7 +28,9 @@
   window.addEventListener('message', (event) => {
     if (event.source !== window) return;
     const data = event.data;
-    if (!data || data.type !== 'NETEASE_INTRO_REQUEST') return;
+    if (!data) return;
+
+    if (data.type !== 'NETEASE_INTRO_REQUEST') return;
 
     const requestId = data.requestId;
     chrome.runtime.sendMessage(

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>电台情歌页面控件测试</title>
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      color: #fff4ed;
+      background: linear-gradient(145deg, #13050a, #3d0b1b);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+    }
+    main { width: min(860px, calc(100vw - 48px)); }
+    h1 { margin: 0 0 10px; font-size: 28px; }
+    p { color: #d9b9b4; }
+    button {
+      min-height: 40px;
+      margin-top: 18px;
+      padding: 0 16px;
+      color: white;
+      background: #9c2246;
+      border: 1px solid #d56683;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .player {
+      position: fixed;
+      inset: auto 0 0;
+      height: 92px;
+      background: rgba(15, 2, 7, 0.95);
+      border-top: 1px solid #68223a;
+    }
+    .progress {
+      position: absolute;
+      top: 20px;
+      left: 8vw;
+      right: 8vw;
+      height: 6px;
+      border-radius: 999px;
+      background: #6a3445;
+    }
+    #event-log { min-height: 1.4em; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>播放器页面夹具</h1>
+    <p>用于验证 AI 等待进度与播放器进度条同步，不连接真实音乐服务。</p>
+    <button id="start" type="button">模拟播放新专辑</button>
+    <audio id="player" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA="></audio>
+  </main>
+  <div class="player"><div class="progress"></div></div>
+  <script>
+    window.__NETEASE_INTRO_ADAPTER__ = {
+      name: 'fixture',
+      mode: 'play_intercept',
+      isPlayerAudio: audio => audio.id === 'player',
+      getProgressAnchor: () => document.querySelector('.progress'),
+      getSongInfo: () => ({
+        name: '测试情歌',
+        artist: '测试歌手',
+        album: '第一次遇见',
+      }),
+    };
+  </script>
+  <script src="../../netease-intro-extension/intercept.js"></script>
+  <script>
+    document.getElementById('start').addEventListener('click', () => {
+      const player = document.getElementById('player');
+      player.src = `${player.src}#${Date.now()}`;
+      player.play().catch(() => {});
+    });
+    window.postMessage({
+      type: 'NETEASE_INTRO_STATE',
+      enabled: true,
+      albumEnabled: true,
+      voice: 'Maia',
+    }, '*');
+  </script>
+</body>
+</html>

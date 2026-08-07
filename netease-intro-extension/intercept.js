@@ -8,8 +8,13 @@
   if (!adapter) return;
 
   let enabled = true;
+  let albumEnabled = true;
   let voicePref = 'Maia';
   let activeIntro = null; // { token, introAudio, resolve, onDone }
+  const announcedAlbumKeys = new Set();
+  let pageUi = null;
+  let waitingUiTimer = null;
+  let waitingUiRun = 0;
 
   // --- Mode dispatch ---
   if (adapter.mode === 'observer') {
@@ -162,6 +167,7 @@
 
       const info = preSongInfo || adapter.getSongInfo();
       if (!info || !info.name) { onComplete(); return; }
+      prepareAlbumContext(info);
       if (adapter.markSongHandled) {
         try { adapter.markSongHandled(info); } catch (e) {}
       }
@@ -194,6 +200,157 @@
         speakBrowser(text, done);
       }
     }, wait);
+  }
+
+  function prepareAlbumContext(info) {
+    info.site = adapter.name;
+    if (!albumEnabled || !info.album) return;
+
+    const normalizedAlbum = info.album.trim().toLocaleLowerCase();
+    const normalizedArtist = (info.artist || '').trim().toLocaleLowerCase();
+    const albumKey = info.albumId
+      ? `${adapter.name}:id:${info.albumId}`
+      : `${adapter.name}:name:${normalizedAlbum}|${normalizedArtist}`;
+
+    info.albumKey = albumKey;
+    if (announcedAlbumKeys.has(albumKey)) return;
+    announcedAlbumKeys.add(albumKey);
+    info.includeAlbumIntro = true;
+  }
+
+  // ========== In-page waiting progress ==========
+  initWaitingIndicator();
+
+  function initWaitingIndicator() {
+    const mount = () => {
+      const anchor = adapter.getProgressAnchor ? adapter.getProgressAnchor() : null;
+      if (!anchor) return;
+      if (!pageUi || !pageUi.host.isConnected) createWaitingIndicator(anchor);
+      else if (pageUi.host.parentElement !== anchor) anchor.appendChild(pageUi.host);
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mount, { once: true });
+    }
+    mount();
+    setInterval(mount, 750);
+  }
+
+  function createWaitingIndicator(anchor) {
+    const host = document.createElement('div');
+    host.id = 'diantai-qingge-progress';
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    const style = document.createElement('style');
+    style.textContent = `
+      :host {
+        all: initial;
+        position: absolute;
+        inset: 0;
+        z-index: 2147483646;
+        display: block;
+        pointer-events: none;
+      }
+      * { box-sizing: border-box; }
+      .waiting-track {
+        position: absolute;
+        inset: 50% 0 auto;
+        height: 4px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 184, 164, 0.22);
+        opacity: 0;
+        transform: translateY(-50%);
+        transition-property: opacity;
+        transition-duration: 150ms;
+      }
+      .waiting-track[data-visible="true"] { opacity: 1; }
+      .waiting-bar {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #ff705f, #ffb18f 62%, #fff0d2);
+        box-shadow: 0 0 8px rgba(255, 112, 95, 0.72);
+        transition-property: width;
+        transition-duration: 320ms;
+        transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .waiting-track, .waiting-bar { transition-duration: 0ms; }
+      }
+      @media (forced-colors: active) {
+        .waiting-bar { background: Highlight; box-shadow: none; }
+      }
+    `;
+
+    const track = document.createElement('div');
+    track.className = 'waiting-track';
+    track.dataset.visible = 'false';
+    track.setAttribute('role', 'progressbar');
+    track.setAttribute('aria-label', 'AI 口播准备进度');
+    track.setAttribute('aria-valuemin', '0');
+    track.setAttribute('aria-valuemax', '100');
+    track.setAttribute('aria-valuenow', '0');
+    const bar = document.createElement('div');
+    bar.className = 'waiting-bar';
+    track.appendChild(bar);
+
+    shadow.append(style, track);
+    anchor.appendChild(host);
+    pageUi = { host, track, bar };
+  }
+
+  function startWaitingUi(song) {
+    if (!pageUi || !pageUi.host.isConnected) {
+      const anchor = adapter.getProgressAnchor ? adapter.getProgressAnchor() : null;
+      if (anchor) createWaitingIndicator(anchor);
+    }
+    if (!pageUi) return;
+    waitingUiRun += 1;
+    const run = waitingUiRun;
+    if (waitingUiTimer) clearInterval(waitingUiTimer);
+    let progress = 7;
+    const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    pageUi.track.dataset.visible = 'true';
+    pageUi.track.setAttribute('aria-valuetext', song.includeAlbumIntro ? '正在查询专辑资料' : '正在生成口播');
+    pageUi.bar.style.width = `${reducedMotion ? 45 : progress}%`;
+    pageUi.track.setAttribute('aria-valuenow', String(reducedMotion ? 45 : progress));
+    if (!reducedMotion) {
+      waitingUiTimer = setInterval(() => {
+        if (run !== waitingUiRun) return;
+        progress = Math.min(92, progress + Math.max(0.8, (92 - progress) * 0.045));
+        pageUi.bar.style.width = `${progress}%`;
+        pageUi.track.setAttribute('aria-valuenow', String(Math.round(progress)));
+      }, 420);
+    }
+  }
+
+  function finishWaitingUi(ok) {
+    if (!pageUi) return;
+    waitingUiRun += 1;
+    const run = waitingUiRun;
+    if (waitingUiTimer) clearInterval(waitingUiTimer);
+    waitingUiTimer = null;
+    pageUi.bar.style.width = '100%';
+    pageUi.track.setAttribute('aria-valuenow', '100');
+    pageUi.track.setAttribute('aria-valuetext', ok ? '口播已就绪' : '已使用简洁播报');
+    setTimeout(() => {
+      if (!pageUi || run !== waitingUiRun) return;
+      pageUi.track.dataset.visible = 'false';
+      pageUi.bar.style.width = '0%';
+      pageUi.track.setAttribute('aria-valuenow', '0');
+      pageUi.track.removeAttribute('aria-valuetext');
+    }, 900);
+  }
+
+  function cancelWaitingUi() {
+    if (!pageUi) return;
+    waitingUiRun += 1;
+    if (waitingUiTimer) clearInterval(waitingUiTimer);
+    waitingUiTimer = null;
+    pageUi.track.dataset.visible = 'false';
+    pageUi.bar.style.width = '0%';
+    pageUi.track.setAttribute('aria-valuenow', '0');
+    pageUi.track.removeAttribute('aria-valuetext');
   }
 
   // === Fixed fade defaults (no UI knobs to keep things simple) ===
@@ -299,11 +456,10 @@
       try { old.resolve(); } catch (e) {}
     }
     if (adapter.setIntroActive) adapter.setIntroActive(false);
+    cancelWaitingUi();
   }
 
-  // Score table for system TTS voices — higher = better quality.
-  // Goal: when user picks "browser default", avoid the harsh Huihui voice
-  // and prefer modern neural voices (Xiaoxiao, Yunxi, Google etc.) if installed.
+  // Score table for the failure-only system TTS fallback — higher is better.
   function scoreVoice(v) {
     const n = (v.name || '').toLowerCase();
     if (/xiaoxiao|晓晓/.test(n)) return 100;
@@ -333,16 +489,10 @@
     u.rate = 1.1;
     u.volume = 1.0;
 
-    if (voicePref && voicePref.startsWith('browser:')) {
-      // User explicitly picked a system voice
-      const wanted = voicePref.slice(8);
-      const v = speechSynthesis.getVoices().find(v => v.name === wanted);
-      if (v) u.voice = v;
-    } else if (voicePref === 'browser') {
-      // Auto-pick the best installed Chinese voice (avoids Huihui by default)
-      const best = pickBestZhVoice();
-      if (best) u.voice = best;
-    }
+    // System speech is no longer selectable. It is used only when cloud TTS
+    // fails, choosing the best installed Chinese voice automatically.
+    const best = pickBestZhVoice();
+    if (best) u.voice = best;
 
     u.onend = onDone;
     u.onerror = onDone;
@@ -352,11 +502,16 @@
 
   function requestAiIntro(song) {
     return new Promise((resolve) => {
+      startWaitingUi(song);
       const requestId = Math.random().toString(36).slice(2) + Date.now();
+      // Album web search (18s) followed by cloud TTS (15s) needs a wider first-use window.
+      // Ordinary per-song intros retain the short timeout.
+      const responseTimeout = song.includeAlbumIntro ? 38000 : 28000;
       const timer = setTimeout(() => {
         window.removeEventListener('message', handler);
+        finishWaitingUi(false);
         resolve(null);
-      }, 9000);
+      }, responseTimeout);
 
       function handler(event) {
         if (event.source !== window) return;
@@ -364,6 +519,9 @@
         if (d && d.type === 'NETEASE_INTRO_RESPONSE' && d.requestId === requestId) {
           clearTimeout(timer);
           window.removeEventListener('message', handler);
+          finishWaitingUi(Boolean(
+            d.response && d.response.text && !d.response.error && !d.response.degraded
+          ));
           resolve(d.response);
         }
       }
@@ -376,6 +534,7 @@
     if (event.source !== window) return;
     if (event.data && event.data.type === 'NETEASE_INTRO_STATE') {
       if ('enabled' in event.data) enabled = event.data.enabled;
+      if ('albumEnabled' in event.data) albumEnabled = event.data.albumEnabled;
       if ('voice' in event.data) voicePref = event.data.voice;
       if (!enabled) {
         stopActiveIntro();

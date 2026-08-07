@@ -6,6 +6,12 @@
   window.__NETEASE_INTRO_ADAPTER__ = {
     name: 'netease',
 
+    getProgressAnchor() {
+      return document.querySelector(
+        '.m-playbar .m-pbar, .m-playbar .barbg, .m-playbar [class*="progress"]'
+      );
+    },
+
     // Filter: should this <audio> element trigger our intro?
     isPlayerAudio(audio) {
       return audio.tagName === 'AUDIO' && !!audio.src;
@@ -19,10 +25,15 @@
         const result = window.player.getPlaying();
         if (result && result.track && result.track.name) {
           const t = result.track;
+          const album = t.album || t.al || null;
+          const artists = t.artists || t.ar || [];
           info = {
             name: t.name,
-            artist: (t.artists || []).map(a => a.name).join('/'),
-            album: t.album ? t.album.name : '',
+            songId: t.id != null ? String(t.id) : '',
+            artist: artists.map(a => a.name).join('/'),
+            album: album ? album.name : '',
+            albumId: album && album.id != null ? String(album.id) : '',
+            releaseDate: album && album.publishTime ? formatDate(album.publishTime) : '',
           };
         }
       } catch (e) {}
@@ -62,6 +73,17 @@
             }
           } catch (e) {}
           if (idx >= 0) {
+            const queuedTrack = queue[idx];
+            const queuedAlbum = queuedTrack && (queuedTrack.album || queuedTrack.al);
+            const queuedArtists = queuedTrack && (queuedTrack.artists || queuedTrack.ar);
+            if (!info.album && queuedAlbum) {
+              info.album = queuedAlbum.name || '';
+              info.albumId = queuedAlbum.id != null ? String(queuedAlbum.id) : '';
+              info.releaseDate = queuedAlbum.publishTime ? formatDate(queuedAlbum.publishTime) : '';
+            }
+            if (!info.artist && Array.isArray(queuedArtists)) {
+              info.artist = queuedArtists.map(a => a.name).join('/');
+            }
             info.trackIndex = idx;
             info.totalTracks = queue.length;
             info.isFirst = idx === 0;
@@ -73,4 +95,12 @@
       return info;
     },
   };
+
+  function formatDate(timestamp) {
+    const d = new Date(timestamp);
+    if (!Number.isFinite(d.getTime())) return '';
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${month}-${day}`;
+  }
 })();

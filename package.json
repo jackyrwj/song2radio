@@ -1,0 +1,17 @@
+{
+  "name": "song2radio-service",
+  "version": "3.1.3",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "test": "node --test",
+    "validate:extension": "node scripts/validate-extension.mjs",
+    "check": "npm test && npm run validate:extension"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.35.3"
+  }
+}

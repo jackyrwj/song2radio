@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "歌单电台",
-  "version": "2.0",
-  "description": "把你的歌单变成一档私人音乐电台",
+  "name": "电台情歌",
+  "version": "3.1.3",
+  "description": "把网页歌单和专辑变成一档有故事、有串场的私人电台",
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
@@ -13,15 +13,14 @@
     "*://music.163.com/*",
     "*://*.y.qq.com/*",
     "*://y.qq.com/*",
-    "https://dashscope.aliyuncs.com/*",
-    "https://api.deepseek.com/*"
+    "https://song2radio.vercel.app/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "歌单电台",
+    "default_title": "电台情歌",
     "default_icon": {
       "16": "icons/icon-16.png",
       "48": "icons/icon-48.png",

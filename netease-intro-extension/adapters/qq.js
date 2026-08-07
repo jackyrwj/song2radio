@@ -11,6 +11,43 @@
   let lastHandledKey = '';
   let introActive = false;
 
+  function firstText(root, selectors) {
+    for (const selector of selectors) {
+      const el = root.querySelector(selector);
+      const text = el && el.textContent.trim();
+      if (text) return text;
+    }
+    return '';
+  }
+
+  function idFromHref(root, selector, pattern) {
+    const link = root.querySelector(selector);
+    const href = link && link.getAttribute('href');
+    const match = href && href.match(pattern);
+    return match ? match[1] : '';
+  }
+
+  function albumFromSongRow(songId, songName) {
+    const songLinks = Array.from(document.querySelectorAll('a[href*="/songDetail/"]'));
+    const songLink = songLinks.find((link) => {
+      const href = link.getAttribute('href') || '';
+      if (songId && href.includes(`/songDetail/${songId}`)) return true;
+      return !songId && songName && link.textContent.trim() === songName;
+    });
+    if (!songLink) return null;
+
+    const row = songLink.closest('li, tr, [class*="songlist__item"], [class*="playlist__item"]');
+    if (!row) return null;
+    const albumLink = row.querySelector('a[href*="/albumDetail/"]');
+    if (!albumLink) return null;
+    const href = albumLink.getAttribute('href') || '';
+    const match = href.match(/\/albumDetail\/([^/?#]+)/);
+    return {
+      album: albumLink.textContent.trim(),
+      albumId: match ? match[1] : '',
+    };
+  }
+
   function readSongInfo() {
     const container = document.querySelector(SONG_INFO_SEL)
       || document.querySelector('.player_music')
@@ -19,7 +56,10 @@
     if (!container) return { name: '', artist: '', album: '' };
 
     const links = container.querySelectorAll('a, span, div');
-    let name = '';
+    let name = firstText(container, [
+      '.player_music__song', '.player_music__name',
+      '[class*="player_music__song"]', '[class*="song_name"]',
+    ]);
     const artists = [];
 
     for (const a of links) {
@@ -33,7 +73,43 @@
       }
     }
 
-    return { name, artist: artists.join('/'), album: '' };
+    let artist = firstText(container, [
+      '.player_music__singer', '.player_music__author',
+      '[class*="player_music__singer"]', '[class*="playlist__author"]',
+    ]);
+    if (!artist) artist = Array.from(new Set(artists)).join('/');
+
+    const songId = idFromHref(container, 'a[href*="/songDetail/"]', /\/songDetail\/([^/?#]+)/);
+    let album = firstText(container, [
+      'a[href*="/albumDetail/"]', '[class*="album_name"]', '[class*="music__album"]',
+    ]);
+    let albumId = idFromHref(container, 'a[href*="/albumDetail/"]', /\/albumDetail\/([^/?#]+)/);
+    let releaseDate = '';
+
+    if (!album) {
+      const rowAlbum = albumFromSongRow(songId, name);
+      if (rowAlbum) {
+        album = rowAlbum.album;
+        albumId = rowAlbum.albumId;
+      }
+    }
+
+    // The bottom player often omits album data. On an album detail page, use
+    // the page header as a reliable fallback for the currently playing track.
+    if (!album && /\/albumDetail\//.test(location.pathname)) {
+      album = firstText(document, [
+        '.data__name_txt', '.data__name', '.album_detail__name',
+        'h1[class*="data__name"]', 'h1[class*="album"]',
+      ]);
+      const pathMatch = location.pathname.match(/\/albumDetail\/([^/?#]+)/);
+      albumId = pathMatch ? pathMatch[1] : albumId;
+      const releaseLine = Array.from(document.querySelectorAll('.data_info__item, [class*="data_info"]'))
+        .map(el => el.textContent.trim())
+        .find(text => /发行时间|发行日期|Release/i.test(text));
+      if (releaseLine) releaseDate = releaseLine.replace(/^.*?[：:]/, '').trim();
+    }
+
+    return { name, songId, artist, album, albumId, releaseDate };
   }
 
   function songKey(info) {
@@ -67,6 +143,16 @@
     name: 'qq',
     mode: 'observer',
     hookMediaPlay: true,
+
+    getProgressAnchor() {
+      const candidates = Array.from(document.querySelectorAll(
+        '.player_progress__inner, .player_progress [class*="progress__inner"], '
+        + '.player__ft [class*="progress"], .mod_player [class*="progress"]'
+      ));
+      return candidates.find(element => getComputedStyle(element).position !== 'static')
+        || candidates[0]
+        || null;
+    },
 
     getSongInfo: readSongInfo,
 
