@@ -272,3 +272,11 @@ QQ 音乐的不同页面使用不同播放器结构，切歌时曲目信息、�
 ## 说明
 
 这个项目主要用于个人学习。公开提供共享 AI 与语音服务时，请设置合理的限流、预算告警和 Vercel 防火墙规则，并留意百炼、Vercel 与 Upstash 的计费和服务条款。
+
+## 支持项目
+
+如果电台情歌让你的听歌体验更有趣，欢迎请我喝杯咖啡，支持项目继续维护。
+
+<p align="center">
+  <img src="store-assets/buy-me-a-coffee-qr.png" width="240" alt="Buy Me a Coffee 支持二维码" />
+</p>
