@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/%E7%94%B5%E5%8F%B0%E6%83%85%E6%AD%8C/ffddnblecdhjiggedgagihanepdpakop?authuser=0&amp;hl=zh-CN">Chrome Web Store</a> ·
   <a href="https://jackyrwj.github.io/song2radio/">官方网站</a> ·
   <a href="#5-分钟开始使用">快速开始</a> ·
   <a href="https://jackyrwj.github.io/song2radio/support.html">帮助与支持</a> ·
@@ -20,7 +21,9 @@
 </p>
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/%E7%94%B5%E5%8F%B0%E6%83%85%E6%AD%8C/ffddnblecdhjiggedgagihanepdpakop?authuser=0&amp;hl=zh-CN"><img src="https://img.shields.io/badge/Chrome_Web_Store-%E7%AB%8B%E5%8D%B3%E5%AE%89%E8%A3%85-4285F4?logo=googlechrome&logoColor=white" alt="从 Chrome Web Store 安装" /></a>
   <a href="https://github.com/jackyrwj/song2radio/actions/workflows/validate.yml"><img src="https://github.com/jackyrwj/song2radio/actions/workflows/validate.yml/badge.svg" alt="扩展校验状态" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" /></a>
   <img src="https://img.shields.io/badge/Manifest-V3-4285F4?logo=googlechrome&logoColor=white" alt="Chrome Manifest V3" />
   <img src="https://img.shields.io/badge/Node.js-24-339933?logo=nodedotjs&logoColor=white" alt="Node.js 24" />
 </p>
@@ -32,8 +35,8 @@
 - **服务失败不阻塞音乐**：接口超时或额度不足时自动降级为简单文案或系统语音。
 - **数据用途透明**：只处理生成口播所需的歌曲、歌手和专辑信息；详见[隐私政策](https://jackyrwj.github.io/song2radio/privacy.html)。
 
-> [!NOTE]
-> 项目目前尚未上架 Chrome Web Store，请通过仓库中的扩展包或源码手动安装。
+> [!TIP]
+> 电台情歌已上架 Chrome Web Store，可[直接安装](https://chromewebstore.google.com/detail/%E7%94%B5%E5%8F%B0%E6%83%85%E6%AD%8C/ffddnblecdhjiggedgagihanepdpakop?authuser=0&hl=zh-CN)。
 
 ## 使用预览
 
@@ -68,7 +71,17 @@
 - Chrome、Edge 或其他支持 Manifest V3 的 Chromium 浏览器
 - 能正常使用的[网易云音乐网页版](https://music.163.com/)或 [QQ 音乐网页版](https://y.qq.com/)
 
-### 1. 获取扩展
+### 1. 从 Chrome Web Store 安装
+
+打开[电台情歌商店页面](https://chromewebstore.google.com/detail/%E7%94%B5%E5%8F%B0%E6%83%85%E6%AD%8C/ffddnblecdhjiggedgagihanepdpakop?authuser=0&hl=zh-CN)，点击「添加至 Chrome」即可完成安装。
+
+### 2. 开始播放
+
+打开网易云音乐或 QQ 音乐网页版，像平时一样播放歌单。切换到新歌时，扩展会暂停音乐、准备并播报介绍，然后自动继续播放。
+
+如果刚安装后没有生效，请刷新音乐页面；仍未生效时，在 `chrome://extensions/` 中确认扩展已启用。
+
+### 手动安装（开发者可选）
 
 选择一种方式：
 
@@ -80,20 +93,14 @@ git clone https://github.com/jackyrwj/song2radio.git
 cd song2radio
 ```
 
-### 2. 加载扩展
+加载本地扩展：
 
 1. 打开 `chrome://extensions/`；Edge 用户打开 `edge://extensions/`。
 2. 开启右上角的「开发者模式」。
 3. 点击「加载已解压的扩展程序」。
 4. 选择解压后的目录，或仓库中的 `netease-intro-extension/`。
 
-浏览器工具栏中出现「电台情歌」图标即表示安装成功。
-
-### 3. 开始播放
-
-打开网易云音乐或 QQ 音乐网页版，像平时一样播放歌单。切换到新歌时，扩展会暂停音乐、准备并播报介绍，然后自动继续播放。
-
-如果刚安装后没有生效，请刷新音乐页面；仍未生效时，在扩展程序页面点击一次「重新加载」。
+浏览器工具栏中出现「电台情歌」图标即表示安装成功。修改源码后，请在扩展程序页面点击「重新加载」，再刷新音乐页面。
 
 ## 设置
 
@@ -236,6 +243,7 @@ QQ 音乐的不同页面使用不同播放器结构，切歌时曲目信息、�
 
 | 想做什么 | 阅读 |
 | --- | --- |
+| 安装浏览器扩展 | [Chrome Web Store](https://chromewebstore.google.com/detail/%E7%94%B5%E5%8F%B0%E6%83%85%E6%AD%8C/ffddnblecdhjiggedgagihanepdpakop?authuser=0&hl=zh-CN) |
 | 了解产品 | [官方网站](https://jackyrwj.github.io/song2radio/) |
 | 排查安装或播放问题 | [帮助与支持](https://jackyrwj.github.io/song2radio/support.html) |
 | 了解数据处理方式 | [隐私政策](https://jackyrwj.github.io/song2radio/privacy.html) |
@@ -252,8 +260,7 @@ QQ 音乐的不同页面使用不同播放器结构，切歌时曲目信息、�
 - [x] 服务端输入校验、缓存与多层限流
 - [x] 自动化测试、扩展校验与 CI 打包
 - [x] 官网、支持页面与隐私政策
-- [ ] 完成首次使用数据披露与主动同意流程
-- [ ] 提交 Chrome Web Store 审核
+- [x] Chrome Web Store 上架
 - [ ] 持续跟进音乐网站页面更新与兼容性
 
 ## 参与贡献
@@ -267,7 +274,7 @@ QQ 音乐的不同页面使用不同播放器结构，切歌时曲目信息、�
 
 ## 许可证
 
-本仓库目前尚未添加开源许可证。在许可证明确前，源代码默认保留所有权利；如需复制、修改、分发或商用，请先联系维护者取得许可。
+本项目采用 [MIT License](LICENSE) 开源。你可以使用、复制、修改、分发和商用本项目，但需保留原始版权声明和许可证文本。
 
 ## 说明
 
